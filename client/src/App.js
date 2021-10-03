@@ -1,6 +1,10 @@
-import  React, { Component } from "react";
+import React, { Component } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
+import ListGroup from 'react-bootstrap/ListGroup';
+import Table from 'react-bootstrap/Table';
 import Whitelist from "./contracts/Whitelist.json";
 import getWeb3 from "./getWeb3";
 import "./App.css";
@@ -88,17 +92,53 @@ class App extends Component {
             <div className="App">
                 Hi, this is Alex!
 
-
-
-
-
-
+                <div>
+                    <h2 className="text-center">Système d'une liste blanche</h2>
+                    <hr></hr>
+                    <br></br>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <Card style={{ width: '50rem' }}>
+                        <Card.Header><strong>Liste des comptes autorisés</strong></Card.Header>
+                        <Card.Body>
+                            <ListGroup variant="flush">
+                                <ListGroup.Item>
+                                    <Table striped bordered hover>
+                                        <thead>
+                                        <tr>
+                                            <th>@</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {whitelist !== null &&
+                                        whitelist.map((a) => <tr><td>{a}</td></tr>)
+                                        }
+                                        </tbody>
+                                    </Table>
+                                </ListGroup.Item>
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
+                </div>
+                <br></br>
+                <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <Card style={{ width: '50rem' }}>
+                        <Card.Header><strong>Autoriser un nouveau compte</strong></Card.Header>
+                        <Card.Body>
+                            <Form.Group controlId="formAddress">
+                                <Form.Control type="text" id="address"
+                                              ref={(input) => { this.address = input }}
+                                />
+                            </Form.Group>
+                            <Button onClick={ this.whitelist } variant="dark" > Autoriser </Button>
+                        </Card.Body>
+                    </Card>
+                </div>
+                <br></br>
 
             </div>
 
-
         )
-
 
     }
 
