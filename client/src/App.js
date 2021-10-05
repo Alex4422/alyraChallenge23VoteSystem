@@ -5,7 +5,7 @@ import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Table from 'react-bootstrap/Table';
-import Whitelist from "./contracts/Whitelist.json";
+import Voting from "./contracts/Voting.json";
 import getWeb3 from "./getWeb3";
 import "./App.css";
 
@@ -28,12 +28,12 @@ class App extends Component {
             //using of web3 to get the accounts of the user (in metamask)
             const accounts = await web3.eth.getAccounts();
 
-            //get the instance of the smart contract "Whitelist" with web3 and the informations of deployed file (client/src/contracts/Whitelist.json)
+            //get the instance of the smart contract "Voting" with web3 and the informations of deployed file (client/src/contracts/Voting.json)
             const networkId = await web3.eth.net.getId();
-            const deployedNetwork = Whitelist.networks[networkId];
+            const deployedNetwork = Voting.networks[networkId];
 
             const instance = new web3.eth.Contract(
-                Whitelist.abi,
+                Voting.abi,
                 deployedNetwork && deployedNetwork.address,
             );
 
@@ -54,31 +54,29 @@ class App extends Component {
      * @returns {Promise<void>}
      */
     runInit = async() => {
-        const { accounts, contract } = this.state;
+        const {accounts, contract} = this.state;
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
 
         //update the state
         this.setState({whitelist: whitelist});
-    };
+    }
 
     /**
      *
      * @returns {Promise<void>}
      */
     whitelist = async() => {
-        const { accounts, contract} = this.state;
-        const address = this.address.value;
+         const {accounts, contract} = this.state;
+         const address = this.address.value;
 
-        //Interaction with the smart contract to add an account
-        await contract.methods.whitelist(address).send({from: accounts[0]});
+         //Interaction with the smart contract to add an account
+         await contract.methods.registerVoter(address).send({from: accounts[0]});
 
-        //get the list of authorised account list
-        this.runInit();
+         //get the list of authorised account list
+         this.runInit();
     }
-
-
 
 
     render(){
@@ -90,16 +88,16 @@ class App extends Component {
         return (
 
             <div className="App">
-                Hi, this is Alex!
-
                 <div>
-                    <h2 className="text-center">Système d'une liste blanche</h2>
+                    <h2 className="text-center">Welcome to the voting system DAPP!</h2>
+
                     <hr></hr>
                     <br></br>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <Card style={{ width: '50rem' }}>
-                        <Card.Header><strong>Liste des comptes autorisés</strong></Card.Header>
+                        <Card.Header><strong>List of the authorised accounts</strong></Card.Header>
+
                         <Card.Body>
                             <ListGroup variant="flush">
                                 <ListGroup.Item>
@@ -123,14 +121,17 @@ class App extends Component {
                 <br></br>
                 <div style={{display: 'flex', justifyContent: 'center'}}>
                     <Card style={{ width: '50rem' }}>
-                        <Card.Header><strong>Autoriser un nouveau compte</strong></Card.Header>
+
+                        <Card.Header><strong>Authorise a new account</strong></Card.Header>
                         <Card.Body>
-                            <Form.Group controlId="formAddress">
+                            <Form.Group >
                                 <Form.Control type="text" id="address"
                                               ref={(input) => { this.address = input }}
                                 />
                             </Form.Group>
-                            <Button onClick={ this.whitelist } variant="dark" > Autoriser </Button>
+
+                            <Button onClick={ this.whitelist } variant="dark" > Authorise </Button>
+
                         </Card.Body>
                     </Card>
                 </div>
@@ -141,7 +142,6 @@ class App extends Component {
         )
 
     }
-
 }
 
 export default App;
