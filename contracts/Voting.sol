@@ -162,7 +162,6 @@ contract Voting is Ownable{
     function registerVoter(address _voterAddress) public onlyOwner isRightWorkflowStatus(WorkflowStatus.RegisteringVoters){
 
         require(voters[_voterAddress].isRegistered == false,'The voter is already registered');
-        //voters[_voterAddress] = voters.push(_address);
         addresses.push(_voterAddress);
         voters[_voterAddress].isRegistered = true;
 
