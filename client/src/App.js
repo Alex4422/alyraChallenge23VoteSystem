@@ -12,13 +12,14 @@ import "./App.css";
 class App extends Component {
 
     //initialisations
-    state = { web3: null, accounts: null, contract: null, whitelist: null};
+    state = { web3: null, accounts: null, contract: null, whitelist: [], formAddress: null};
 
     /**
-     *
+     * name: componentDidMount
+     * description: initialisation of the application (get the smart contract etc.)
      * @returns {Promise<void>}
      */
-    componentWillMount = async () => {
+    componentDidMount = async () => {
 
         try {
 
@@ -50,7 +51,8 @@ class App extends Component {
     };
 
     /**
-     *
+     * name: runInit
+     * description: used to start the application, to set the events, do the call etc.
      * @returns {Promise<void>}
      */
     runInit = async() => {
@@ -60,14 +62,51 @@ class App extends Component {
         const whitelist = await contract.methods.getAddresses().call();
 
         //update the state
-        this.setState({whitelist: whitelist});
+        this.setState({whitelist});
+
+        //List of the different events defined in the smart contract & application
+        contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
+    }
+
+    /**
+     * name: checkEventVoterRegistered
+     * description: manages the information of the list of the registered users in the smart contract
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkEventVoterRegistered = async (event) => {
+        const { whitelist } = this.state;
+        const updatedWhitelist = whitelist;
+        updatedWhitelist.push(event.returnValues[0]);
+        this.setState({ whitelist: updatedWhitelist });
+    }
+
+    /**
+     * name: checkVoterRegistered
+     * description: registers the voters
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkVoterRegistered = async(event) => {
+        event.preventDefault();
+        const {accounts,contract} = this.state;
+        const address = this.state.formAddress;
+        try {
+            this.setState({formError: null});
+            //We use the registerVoter method defined in the smart contract
+            await contract.methods.registerVoter(address).send({from: accounts[0]});
+            //this.setState({formAddress: null});
+        } catch (error){
+            console.error(error.message);
+            this.setState({formError: error.message});
+        }
     }
 
     /**
      *
      * @returns {Promise<void>}
      */
-    whitelist = async() => {
+    /*whitelist = async() => {
          const {accounts, contract} = this.state;
          const address = this.address.value;
 
@@ -77,10 +116,10 @@ class App extends Component {
          //get the list of authorised account list
          this.runInit();
     }
-
+    */
 
     render(){
-        const { whitelist } = this.state;
+        const { accounts,whitelist,formError } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
@@ -125,13 +164,18 @@ class App extends Component {
                         <Card.Header><strong>Authorise a new account</strong></Card.Header>
                         <Card.Body>
                             <Form.Group >
-                                <Form.Control type="text" id="address"
+
+                                <Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
                                               ref={(input) => { this.address = input }}
                                 />
+
                             </Form.Group>
 
+                            {/*
                             <Button onClick={ this.whitelist } variant="dark" > Authorise </Button>
+                            */}
 
+                            <Button onClick={ this.checkVoterRegistered } variant="dark" > Authorise </Button>
                         </Card.Body>
                     </Card>
                 </div>
