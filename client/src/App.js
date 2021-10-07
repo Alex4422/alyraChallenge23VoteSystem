@@ -7,12 +7,15 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import Table from 'react-bootstrap/Table';
 import Voting from "./contracts/Voting.json";
 import getWeb3 from "./getWeb3";
+import Web3 from "web3";
 import "./App.css";
+
 
 class App extends Component {
 
     //initialisations
-    state = { web3: null, accounts: null, contract: null, whitelist: [], formAddress: null};
+    state = { web3: null, accounts: null, contract: null, whitelist: [],
+        formAddress: null, ownerOfVotes: null};
 
     /**
      * name: componentDidMount
@@ -38,6 +41,14 @@ class App extends Component {
                 deployedNetwork && deployedNetwork.address,
             );
 
+            // To avoid the problem of switch accounts in order to refresh the screen
+            // related to the account where I am
+            window.ethereum.on('accountsChanged', (accounts) => {
+
+                this.setState({accounts});
+
+            });
+
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
             this.setState({web3, accounts, contract: instance}, this.runInit);
@@ -60,9 +71,12 @@ class App extends Component {
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
+        const ownerOfVotes = Web3.utils.toChecksumAddress(await contract.methods.getOwnerOfVotes().call());
+
+        console.log('Checksum of ownerOfVotes: ', ownerOfVotes);
 
         //update the state
-        this.setState({whitelist});
+        this.setState({whitelist, ownerOfVotes} );
 
         //List of the different events defined in the smart contract & application
         contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
@@ -97,95 +111,85 @@ class App extends Component {
             await contract.methods.registerVoter(address).send({from: accounts[0]});
             //this.setState({formAddress: null});
         } catch (error){
-            console.error(error.message);
             this.setState({formError: error.message});
         }
     }
 
-    /**
-     *
-     * @returns {Promise<void>}
-     */
-    /*whitelist = async() => {
-         const {accounts, contract} = this.state;
-         const address = this.address.value;
-
-         //Interaction with the smart contract to add an account
-         await contract.methods.registerVoter(address).send({from: accounts[0]});
-
-         //get the list of authorised account list
-         this.runInit();
-    }
-    */
-
     render(){
-        const { accounts,whitelist,formError } = this.state;
+        const { accounts, whitelist, formError, ownerOfVotes } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
 
-        return (
+        let header = <div className="App">
+            <div>
+                <h2 className="text-center">Welcome to the voting system DAPP!</h2>
 
-            <div className="App">
-                <div>
-                    <h2 className="text-center">Welcome to the voting system DAPP!</h2>
-
-                    <hr></hr>
-                    <br></br>
-                </div>
-                <div style={{display: 'flex', justifyContent: 'center'}}>
-                    <Card style={{ width: '50rem' }}>
-                        <Card.Header><strong>List of the authorised accounts</strong></Card.Header>
-
-                        <Card.Body>
-                            <ListGroup variant="flush">
-                                <ListGroup.Item>
-                                    <Table striped bordered hover>
-                                        <thead>
-                                        <tr>
-                                            <th>@</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {whitelist !== null &&
-                                        whitelist.map((a) => <tr><td>{a}</td></tr>)
-                                        }
-                                        </tbody>
-                                    </Table>
-                                </ListGroup.Item>
-                            </ListGroup>
-                        </Card.Body>
-                    </Card>
-                </div>
+                <hr></hr>
                 <br></br>
-                <div style={{display: 'flex', justifyContent: 'center'}}>
-                    <Card style={{ width: '50rem' }}>
-
-                        <Card.Header><strong>Authorise a new account</strong></Card.Header>
-                        <Card.Body>
-                            <Form.Group >
-
-                                <Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
-                                              ref={(input) => { this.address = input }}
-                                />
-
-                            </Form.Group>
-
-                            {/*
-                            <Button onClick={ this.whitelist } variant="dark" > Authorise </Button>
-                            */}
-
-                            <Button onClick={ this.checkVoterRegistered } variant="dark" > Authorise </Button>
-                        </Card.Body>
-                    </Card>
-                </div>
-                <br></br>
-
             </div>
 
-        )
+            <br></br>
+            <br></br>
+        </div>;
 
+        
+
+
+        let cSAccounts0 = Web3.utils.toChecksumAddress(accounts[0]);
+
+        if (cSAccounts0 === ownerOfVotes) {
+
+
+            return (
+                <div>
+
+                    {header}
+
+
+                </div>
+            )
+
+
+
+        }else{
+
+            return(
+                <div>
+                    {header}
+                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                        <h1>Operation forbidden because you are not the admin of the voting system!</h1>
+                    </div>
+                </div>
+            )
+
+        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 export default App;
