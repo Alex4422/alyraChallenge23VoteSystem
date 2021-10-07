@@ -15,7 +15,7 @@ class App extends Component {
 
     //initialisations
     state = { web3: null, accounts: null, contract: null, whitelist: [],
-        formAddress: null, ownerOfVotes: null};
+        formAddress: null, ownerOfVotes: null, workflowStatusNum: 0};
 
     /**
      * name: componentDidMount
@@ -78,8 +78,9 @@ class App extends Component {
         //update the state
         this.setState({whitelist, ownerOfVotes} );
 
-        //List of the different events defined in the smart contract & application
+        //List of the different events defined in the smart contract Voting & application for the DAPP
         contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
+        contract.events.WorkflowStatusChange().on('data', (event) => this.checkEventWorkflowStatusChange(event)).on('error', console.error);
     }
 
     /**
@@ -115,24 +116,40 @@ class App extends Component {
         }
     }
 
+    /**
+     * name: checkEventWorkflowStatusChange
+     * description: allows to move in the different states of the workflow defined in Voting.sol
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkEventWorkflowStatusChange = async (event) => {
+        const { workflowStatusNum } = this.state;
+        const newWorkflowStatusNum = parseInt(workflowStatusNum) + 1;
+        this.setState({workflowStatusNum: parseInt(newWorkflowStatusNum)});
+    }
+
+
+
+    //************************ render ************************
     render(){
-        const { accounts, whitelist, formError, ownerOfVotes } = this.state;
+        const { accounts, whitelist, formError, ownerOfVotes, workflowStatusNum } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
 
         //************************ header ************************
-        let header = <div className="App">
-            <div>
-                <h2 className="text-center">Welcome to the voting system DAPP!</h2>
+        let header =
+            <div className="App">
+                <div>
+                    <h2 className="text-center">Welcome to the voting system DAPP!</h2>
 
-                <hr></hr>
+                    <hr></hr>
+                    <br></br>
+                </div>
+
                 <br></br>
-            </div>
-
-            <br></br>
-            <br></br>
-        </div>;
+                <br></br>
+            </div>;
 
         //************************ definition of forbidden operations area ************************
         let forbiddenOperationsArea =
@@ -140,61 +157,137 @@ class App extends Component {
                 <h1>Operation forbidden because you are not the admin of the voting system!</h1>
             </div>
 
-
-
-
         let cSAccounts0 = Web3.utils.toChecksumAddress(accounts[0]);
 
-        if (cSAccounts0 === ownerOfVotes) {
+
+        //************************ logic of the display  ************************
+        switch(this.state.workflowStatusNum) {
+
+            //We register the voters
+            case 0:
+                if (cSAccounts0 === ownerOfVotes) {
+
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
 
 
-            return (
-                <div>
+                } else {
+                    return (
+                        <div>
+                            {header}
+                            {forbiddenOperationsArea}
+                        </div>
+                    )
+                }
+                break;
 
-                    {header}
+            //We start to register the proposals
+            case 1:
 
+                if (cSAccounts0 === ownerOfVotes) {
 
-                </div>
-            )
-
-
-
-        }else{
-
-            return(
-                <div>
-                    {header}
-                    {forbiddenOperationsArea}
-                </div>
-            )
-
-        }
-    }
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
 
 
+                } else {
+                    return (
+                        <div>
+                            {header}
+                            {forbiddenOperationsArea}
+                        </div>
+                    )
+                }
+                break;
+
+            //We will start the session of proposal voting
+            case 2:
+
+                if (cSAccounts0 === ownerOfVotes) {
+
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
 
 
+                } else {
+                    return (
+                        <div>
+                            {header}
+                            {forbiddenOperationsArea}
+                        </div>
+                    )
+                }
+                break;
+
+            //We vote the different proposals written by the voters
+            case 3:
+
+                if (cSAccounts0 === ownerOfVotes) {
+
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
 
 
+                } else {
+                    return (
+                        <div>
+                            {header}
+                            {forbiddenOperationsArea}
+                        </div>
+                    )
+                }
+                break;
+
+            //We will begin the tally session
+            case 4:
+
+                if (cSAccounts0 === ownerOfVotes) {
+
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
 
 
+                } else {
+                    return (
+                        <div>
+                            {header}
+                            {forbiddenOperationsArea}
+                        </div>
+                    )
+                }
+                break;
+
+            //We can consult, now, for every voters, the winning proposal
+            case 5:
+
+                    return (
+                        <div>
+                            {header}
+                        </div>
+                    )
+            default:
+                return(<div><h1>The application doesn't seem to work well!</h1></div>);
 
 
+        }//end of switch
+    }//end of the render
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
+}//end of the class App
 
 export default App;
