@@ -121,6 +121,7 @@ class App extends Component {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
 
+        //************************ header ************************
         let header = <div className="App">
             <div>
                 <h2 className="text-center">Welcome to the voting system DAPP!</h2>
@@ -133,7 +134,13 @@ class App extends Component {
             <br></br>
         </div>;
 
-        
+        //************************ definition of forbidden operations area ************************
+        let forbiddenOperationsArea =
+            <div style={{display: 'flex', justifyContent: 'center'}}>
+                <h1>Operation forbidden because you are not the admin of the voting system!</h1>
+            </div>
+
+
 
 
         let cSAccounts0 = Web3.utils.toChecksumAddress(accounts[0]);
@@ -157,9 +164,7 @@ class App extends Component {
             return(
                 <div>
                     {header}
-                    <div style={{display: 'flex', justifyContent: 'center'}}>
-                        <h1>Operation forbidden because you are not the admin of the voting system!</h1>
-                    </div>
+                    {forbiddenOperationsArea}
                 </div>
             )
 
