@@ -71,8 +71,7 @@ class App extends Component {
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
-        const ownerOfVotes = Web3.utils.toChecksumAddress(await contract.methods.getOwnerOfVotes().call());
-
+        let ownerOfVotes = Web3.utils.toChecksumAddress(await contract.methods.getOwnerOfVotes().call());
         console.log('Checksum of ownerOfVotes: ', ownerOfVotes);
 
         //update the state
@@ -81,6 +80,7 @@ class App extends Component {
         //List of the different events defined in the smart contract Voting & application for the DAPP
         contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
         contract.events.WorkflowStatusChange().on('data', (event) => this.checkEventWorkflowStatusChange(event)).on('error', console.error);
+        contract.events.ProposalsRegistrationStarted().on('data', (event) => this.checkEventProposalsRegistrationStarted(event)).on('error', console.error);
     }
 
     /**
@@ -111,6 +111,7 @@ class App extends Component {
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
             //this.setState({formAddress: null});
+
         } catch (error){
             this.setState({formError: error.message});
         }
@@ -128,6 +129,31 @@ class App extends Component {
         this.setState({workflowStatusNum: parseInt(newWorkflowStatusNum)});
     }
 
+    /**
+     * name: checkGetStatusOfWorkflow
+     * description: get the number of status of the workflow where I am
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkGetStatusOfWorkflow = async (event) => {
+
+        const { contract } = this.state;
+
+        const workflowStatus = await contract.methods.getStatusOfWorkflow().call();
+        console.log('The current status of the workflow is: ', workflowStatus);
+    }
+
+    /**
+     * name: checkEventProposalsRegistrationStarted
+     * description: starts the step, in the workflow, to register the proposals for the voters
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkEventProposalsRegistrationStarted = async(event) => {
+
+        const { accounts, contract } = this.state;
+        await contract.methods.startProposalRegistrationSession().send({from: accounts[0]});
+    }
 
 
     //************************ render ************************
@@ -168,11 +194,78 @@ class App extends Component {
                 if (cSAccounts0 === ownerOfVotes) {
 
                     return (
+
                         <div>
                             {header}
-                        </div>
-                    )
 
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>List of authorised accounts</strong></Card.Header>
+                                    <Card.Body>
+                                        <ListGroup variant="flush">
+                                            <ListGroup.Item>
+                                                <Table striped bordered hover>
+                                                    <thead>
+                                                    <tr>
+                                                        <th>@</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {whitelist.map((a) => <tr>
+                                                        <td>{a}</td>
+                                                    </tr>)
+                                                    }
+                                                    </tbody>
+                                                </Table>
+                                            </ListGroup.Item>
+                                        </ListGroup>
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>Authorise a new account</strong></Card.Header>
+                                    <Card.Body>
+                                        <Form.Group >
+
+                                            <Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
+                                            />
+
+                                        </Form.Group>
+
+                                        <br/>
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+
+                                            <Button onClick={this.checkVoterRegistered} variant="dark"> Authorise </Button>
+
+                                        </div>
+
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>Your role: admin </strong></Card.Header>
+
+                                    <Card.Body>
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button onClick={this.checkEventProposalsRegistrationStarted} variant="danger"> Start the session of
+                                                registration of proposals </Button>
+                                        </div>
+
+                                        <br/>
+
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                        </div>
+
+                                    </Card.Body>
+
+                                </Card>
+
+                            </div>
+
+                        </div>
+
+                            )
 
                 } else {
                     return (
