@@ -105,8 +105,16 @@ class App extends Component {
     checkVoterRegistered = async(event) => {
         event.preventDefault();
         const {accounts,contract} = this.state;
-        const address = this.state.formAddress;
-        try {
+        //const address = this.state.formAddress;
+
+        const address = this.address.value;
+
+        this.setState({formError: null});
+        //We use the registerVoter method defined in the smart contract
+        await contract.methods.registerVoter(address).send({from: accounts[0]});
+        //this.setState({formAddress: null});
+
+        /*try {
             this.setState({formError: null});
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
@@ -114,7 +122,7 @@ class App extends Component {
 
         } catch (error){
             this.setState({formError: error.message});
-        }
+        } */
     }
 
     /**
@@ -203,7 +211,7 @@ class App extends Component {
                                     <Card.Header className="text-center"><strong>List of authorised accounts</strong></Card.Header>
                                     <Card.Body>
                                         <ListGroup variant="flush">
-                                            <ListGroup.Item>
+                                            <ListGroup.Item >
                                                 <Table striped bordered hover>
                                                     <thead>
                                                     <tr>
@@ -212,7 +220,7 @@ class App extends Component {
                                                     </thead>
                                                     <tbody>
                                                     {whitelist.map((a) => <tr>
-                                                        <td>{a}</td>
+                                                        <td key="{a}">{a}</td>
                                                     </tr>)
                                                     }
                                                     </tbody>
@@ -225,9 +233,15 @@ class App extends Component {
                                 <Card style={{width: '50rem'}}>
                                     <Card.Header className="text-center"><strong>Authorise a new account</strong></Card.Header>
                                     <Card.Body>
-                                        <Form.Group >
+                                        <Form.Group controlId="formAddress" key={this.address}>
 
-                                            <Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
+                                            {/*<Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
+                                            />*/}
+
+                                            <Form.Control type="text"
+                                                          ref={(input) => {
+                                                              this.address = input
+                                                          }}
                                             />
 
                                         </Form.Group>
@@ -265,7 +279,7 @@ class App extends Component {
 
                         </div>
 
-                            )
+                    )
 
                 } else {
                     return (
@@ -368,11 +382,11 @@ class App extends Component {
             //We can consult, now, for every voters, the winning proposal
             case 5:
 
-                    return (
-                        <div>
-                            {header}
-                        </div>
-                    )
+                return (
+                    <div>
+                        {header}
+                    </div>
+                )
             default:
                 return(<div><h1>The application doesn't seem to work well!</h1></div>);
 
@@ -384,3 +398,4 @@ class App extends Component {
 }//end of the class App
 
 export default App;
+
