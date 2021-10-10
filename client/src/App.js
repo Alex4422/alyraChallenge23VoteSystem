@@ -14,8 +14,9 @@ import "./App.css";
 class App extends Component {
 
     //initialisations
-    state = { web3: null, accounts: null, contract: null, whitelist: [],
-        formError: null,formAddress: null, formProposal: null, ownerOfVotes: null, workflowStatusNum: 0};
+    state = { web3: null, accounts: null, contract: null,
+        formError: null,formAddress: null, formProposal: null, ownerOfVotes: null,
+        workflowStatusNum: 0, whitelist: [], proposals: []};
 
     /**
      * name: componentDidMount
@@ -81,6 +82,8 @@ class App extends Component {
         contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
         contract.events.WorkflowStatusChange().on('data', (event) => this.checkEventWorkflowStatusChange(event)).on('error', console.error);
         //proposals registered
+        contract.events.ProposalRegistered().on('data', (event) => this.checkEventProposalRegistered(event)).on('error', console.error);
+
         //voted registered
 
     }
@@ -111,12 +114,12 @@ class App extends Component {
         const address = this.state.formAddress;
 
         try {
-            this.setState({formError: null});
+            this.setState({ formError: null });
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
-            this.setState({formAddress: null});
-
+            window.location.reload(false);
         } catch (error){
+            console.error(error.message);
             this.setState({formError: error.message});
         }
     }
@@ -159,10 +162,48 @@ class App extends Component {
         await contract.methods.startProposalRegistrationSession().send({from: accounts[0]});
     }
 
+    /**
+     *
+     * @param event
+     * @returns {Promise<void>}
+     */
+    checkEventProposalRegistered = async(event) => {
+
+        const { proposals } = this.state;
+        const updatedProposals = proposals;
+        updatedProposals.push(event.returnValues[0]);
+        this.setState({proposals: updatedProposals});
+    }
+
+    /**
+     * name: checkRegisterANewProposal
+     * @returns {Promise<void>}
+     */
+    checkRegisterANewProposal = async(event) => {
+
+        //event.preventDefault();
+        const { accounts, contract } = this.state;
+
+        const yourProposal = this.state.formProposal;
+
+
+
+        try{
+            this.setState({formError:null});
+            //We use the registerProposal method defined in the smart contract
+            await contract.methods.registerProposal(yourProposal);
+            this.setState({formProposal:null});
+        }catch (error){
+            console.error(error.message);
+            this.setState({formError:error.message});
+        }
+
+    }
+
 
     //************************ render ************************
     render(){
-        const { accounts, whitelist, formError, ownerOfVotes, workflowStatusNum } = this.state;
+        const { accounts, whitelist, proposals, formError, ownerOfVotes, workflowStatusNum } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
@@ -284,12 +325,9 @@ class App extends Component {
             //We start to register the proposals
             case 1:
 
-                if (cSAccounts0 === ownerOfVotes) {
-
                     return (
                         <div>
                             {header}
-
 
                             <div style={{display: 'flex', justifyContent: 'center'}}>
                                 <Card style={{width: '50rem'}}>
@@ -304,10 +342,12 @@ class App extends Component {
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                    {whitelist.map((a,index) => <tr key={index}>
-                                                        <td>{a}</td>
-                                                    </tr>)
-                                                    }
+                                                        {proposals !== null && proposals.map((key, index) =>
+                                                            <tr>
+                                                                <td>{index}</td>
+                                                                <td>{key.description}</td>
+                                                            </tr>)
+                                                        }
                                                     </tbody>
                                                 </Table>
                                             </ListGroup.Item>
@@ -328,7 +368,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            <Button onClick={this.checkVoterRegistered} variant="dark"> Submit this one! </Button>
+                                            <Button onClick={this.checkRegisterANewProposal} variant="dark"> Submit this one! </Button>
 
                                         </div>
 
@@ -369,14 +409,7 @@ class App extends Component {
                     )
 
 
-                } else {
-                    return (
-                        <div>
-                            {header}
-                            {forbiddenOperationsArea}
-                        </div>
-                    )
-                }
+
                 break;
 
             //We will start the session of proposal voting
