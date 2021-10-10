@@ -15,7 +15,7 @@ class App extends Component {
 
     //initialisations
     state = { web3: null, accounts: null, contract: null, whitelist: [],
-        formAddress: null, ownerOfVotes: null, workflowStatusNum: 0};
+        formError: null,formAddress: null, formProposal: null, ownerOfVotes: null, workflowStatusNum: 0};
 
     /**
      * name: componentDidMount
@@ -80,7 +80,9 @@ class App extends Component {
         //List of the different events defined in the smart contract Voting & application for the DAPP
         contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
         contract.events.WorkflowStatusChange().on('data', (event) => this.checkEventWorkflowStatusChange(event)).on('error', console.error);
-        contract.events.ProposalsRegistrationStarted().on('data', (event) => this.checkEventProposalsRegistrationStarted(event)).on('error', console.error);
+        //proposals registered
+        //voted registered
+
     }
 
     /**
@@ -103,26 +105,20 @@ class App extends Component {
      * @returns {Promise<void>}
      */
     checkVoterRegistered = async(event) => {
+
         event.preventDefault();
-        const {accounts,contract} = this.state;
-        //const address = this.state.formAddress;
+        const { accounts, contract } = this.state;
+        const address = this.state.formAddress;
 
-        const address = this.address.value;
-
-        this.setState({formError: null});
-        //We use the registerVoter method defined in the smart contract
-        await contract.methods.registerVoter(address).send({from: accounts[0]});
-        //this.setState({formAddress: null});
-
-        /*try {
+        try {
             this.setState({formError: null});
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
-            //this.setState({formAddress: null});
+            this.setState({formAddress: null});
 
         } catch (error){
             this.setState({formError: error.message});
-        } */
+        }
     }
 
     /**
@@ -157,7 +153,7 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    checkEventProposalsRegistrationStarted = async(event) => {
+    checkStartProposalsRegistrationStarted = async() => {
 
         const { accounts, contract } = this.state;
         await contract.methods.startProposalRegistrationSession().send({from: accounts[0]});
@@ -219,10 +215,10 @@ class App extends Component {
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                    {whitelist.map((a) => <tr>
-                                                        <td key="{a}">{a}</td>
-                                                    </tr>)
-                                                    }
+                                                        {whitelist.map((a,index) => <tr key={index}>
+                                                            <td>{a}</td>
+                                                        </tr>)
+                                                        }
                                                     </tbody>
                                                 </Table>
                                             </ListGroup.Item>
@@ -233,15 +229,9 @@ class App extends Component {
                                 <Card style={{width: '50rem'}}>
                                     <Card.Header className="text-center"><strong>Authorise a new account</strong></Card.Header>
                                     <Card.Body>
-                                        <Form.Group controlId="formAddress" key={this.address}>
+                                        <Form.Group  >
 
-                                            {/*<Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
-                                            />*/}
-
-                                            <Form.Control type="text"
-                                                          ref={(input) => {
-                                                              this.address = input
-                                                          }}
+                                            <Form.Control placeholder="Enter Address please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formAddress: e.target.value, formError: null })} type="text" id="address"
                                             />
 
                                         </Form.Group>
@@ -261,7 +251,7 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.checkEventProposalsRegistrationStarted} variant="danger"> Start the session of
+                                            <Button onClick={this.checkStartProposalsRegistrationStarted} variant="danger"> Start the session of
                                                 registration of proposals </Button>
                                         </div>
 
@@ -299,6 +289,82 @@ class App extends Component {
                     return (
                         <div>
                             {header}
+
+
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>List of the proposals:</strong></Card.Header>
+                                    <Card.Body>
+                                        <ListGroup variant="flush">
+                                            <ListGroup.Item >
+                                                <Table striped bordered hover>
+                                                    <thead>
+                                                    <tr>
+                                                        <th>@</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {whitelist.map((a,index) => <tr key={index}>
+                                                        <td>{a}</td>
+                                                    </tr>)
+                                                    }
+                                                    </tbody>
+                                                </Table>
+                                            </ListGroup.Item>
+                                        </ListGroup>
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>Write your proposal:</strong></Card.Header>
+                                    <Card.Body>
+                                        <Form.Group  >
+
+                                            <Form.Control placeholder="Your proposal please " isInvalid={Boolean(formError)} onChange={e => this.setState({ formProposal: e.target.value, formError: null })} type="text" id="proposal"
+                                            />
+
+                                        </Form.Group>
+
+                                        <br/>
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+
+                                            <Button onClick={this.checkVoterRegistered} variant="dark"> Submit this one! </Button>
+
+                                        </div>
+
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>Your role: admin </strong></Card.Header>
+
+                                    <Card.Body>
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="danger"> End the session of
+                                                registration of proposals </Button>
+                                        </div>
+
+                                        <br/>
+
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                        </div>
+
+                                    </Card.Body>
+
+                                </Card>
+
+                            </div>
+
+
+
+
+
+
+
+
+
+
                         </div>
                     )
 
