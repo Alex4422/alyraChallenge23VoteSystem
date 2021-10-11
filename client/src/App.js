@@ -42,6 +42,8 @@ class App extends Component {
                 deployedNetwork && deployedNetwork.address,
             );
 
+
+
             // To avoid the problem of switch accounts in order to refresh the screen
             // related to the account where I am
             window.ethereum.on('accountsChanged', (accounts) => {
@@ -72,42 +74,51 @@ class App extends Component {
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
+
+        const workflowStatusNum = parseInt(await contract.methods.getStatusOfWorkflow().call());
+        console.log('workflowStatusNum: ', workflowStatusNum);
         let ownerOfVotes = Web3.utils.toChecksumAddress(await contract.methods.getOwnerOfVotes().call());
         console.log('Checksum of ownerOfVotes: ', ownerOfVotes);
 
         //update the state
-        this.setState({whitelist, ownerOfVotes} );
+        this.setState({whitelist, ownerOfVotes, workflowStatusNum} );
 
         //List of the different events defined in the smart contract Voting & application for the DAPP
-        contract.events.VoterRegistered().on('data', (event) => this.checkEventVoterRegistered(event)).on('error', console.error);
-        contract.events.WorkflowStatusChange().on('data', (event) => this.checkEventWorkflowStatusChange(event)).on('error', console.error);
+        contract.events.VoterRegistered().on('data', (event) => this.eventVoterRegistered(event)).on('error', console.error);
+        contract.events.WorkflowStatusChange().on('data', (event) => this.eventWorkflowStatusChange(event)).on('error', console.error);
         //proposals registered
-        contract.events.ProposalRegistered().on('data', (event) => this.checkEventProposalRegistered(event)).on('error', console.error);
+        contract.events.ProposalRegistered().on('data', (event) => this.eventProposalRegistered(event)).on('error', console.error);
 
         //voted registered
 
     }
 
     /**
-     * name: checkEventVoterRegistered
+     * name: eventVoterRegistered
      * description: manages the information of the list of the registered users in the smart contract
      * @param event
      * @returns {Promise<void>}
      */
-    checkEventVoterRegistered = async (event) => {
-        const { whitelist } = this.state;
-        const updatedWhitelist = whitelist;
-        updatedWhitelist.push(event.returnValues[0]);
+    
+    eventVoterRegistered = async (event) => {
+        const { whitelist, contract } = this.state;
+        //1 method
+        //const updatedWhitelist = whitelist;
+        //updatedWhitelist.push(event.returnValues[0]);
+
+        //2e method
+        const updatedWhitelist = await contract.methods.getAddresses().call();
         this.setState({ whitelist: updatedWhitelist });
     }
 
     /**
-     * name: checkVoterRegistered
+     * name: RegisterVoter
      * description: registers the voters
      * @param event
      * @returns {Promise<void>}
      */
-    checkVoterRegistered = async(event) => {
+  
+    RegisterVoter = async(event) => {
 
         event.preventDefault();
         const { accounts, contract } = this.state;
@@ -117,7 +128,7 @@ class App extends Component {
             this.setState({ formError: null });
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
-            window.location.reload(false);
+            //window.location.reload(false);
         } catch (error){
             console.error(error.message);
             this.setState({formError: error.message});
@@ -125,24 +136,28 @@ class App extends Component {
     }
 
     /**
-     * name: checkEventWorkflowStatusChange
+     * name: eventWorkflowStatusChange
      * description: allows to move in the different states of the workflow defined in Voting.sol
      * @param event
      * @returns {Promise<void>}
      */
-    checkEventWorkflowStatusChange = async (event) => {
-        const { workflowStatusNum } = this.state;
-        const newWorkflowStatusNum = parseInt(workflowStatusNum) + 1;
-        this.setState({workflowStatusNum: parseInt(newWorkflowStatusNum)});
+    eventWorkflowStatusChange = async (event) => {
+        const { contract } = this.state;
+
+        const updatedworkflowStatusNum = parseInt(await contract.methods.getStatusOfWorkflow().call());
+        this.setState({ workflowStatusNum: updatedworkflowStatusNum });
+
+        //const newWorkflowStatusNum = parseInt(workflowStatusNum) + 1;
+        //this.setState({workflowStatusNum: parseInt(newWorkflowStatusNum)});
     }
 
     /**
-     * name: checkGetStatusOfWorkflow
+     * name: getStatusOfWorkflow
      * description: get the number of status of the workflow where I am
      * @param event
      * @returns {Promise<void>}
      */
-    checkGetStatusOfWorkflow = async (event) => {
+    getStatusOfWorkflow = async (event) => {
 
         const { contract } = this.state;
 
@@ -156,7 +171,7 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    checkStartProposalsRegistrationStarted = async() => {
+    startProposalsRegistrationStarted = async() => {
 
         const { accounts, contract } = this.state;
         await contract.methods.startProposalRegistrationSession().send({from: accounts[0]});
@@ -167,38 +182,41 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    checkEventProposalRegistered = async(event) => {
+    eventProposalRegistered = async(event) => {
 
-        const { proposals } = this.state;
-        const updatedProposals = proposals;
-        updatedProposals.push(event.returnValues[0]);
+        const { proposals, contract } = this.state;
+        //const updatedProposals = proposals;
+        //updatedProposals.push(event.returnValues[0]);
+
+        //2e method
+        const updatedProposals = await contract.methods.getProposals().call();
         this.setState({proposals: updatedProposals});
     }
 
     /**
-     * name: checkRegisterANewProposal
+     * name: registerANewProposal
      * @returns {Promise<void>}
      */
-    checkRegisterANewProposal = async(event) => {
+    registerANewProposal = async(event) => {
 
         //event.preventDefault();
-        const { accounts, contract } = this.state;
+        const { accounts, contract  } = this.state;
 
         const yourProposal = this.state.formProposal;
-
-
 
         try{
             this.setState({formError:null});
             //We use the registerProposal method defined in the smart contract
-            await contract.methods.registerProposal(yourProposal);
-            this.setState({formProposal:null});
+            await contract.methods.registerProposal(yourProposal).send({from:accounts[0]});
+            //this.setState({formProposal:null});
         }catch (error){
             console.error(error.message);
             this.setState({formError:error.message});
         }
 
     }
+    
+  
 
 
     //************************ render ************************
@@ -280,7 +298,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            <Button onClick={this.checkVoterRegistered} variant="dark"> Authorise </Button>
+                                            <Button onClick={this.RegisterVoter} variant="dark"> Authorise </Button>
 
                                         </div>
 
@@ -292,14 +310,14 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.checkStartProposalsRegistrationStarted} variant="danger"> Start the session of
+                                            <Button onClick={this.startProposalsRegistrationStarted} variant="danger"> Start the session of
                                                 registration of proposals </Button>
                                         </div>
 
                                         <br/>
 
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                            <Button onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
                                         </div>
 
                                     </Card.Body>
@@ -343,7 +361,7 @@ class App extends Component {
                                                     </thead>
                                                     <tbody>
                                                         {proposals !== null && proposals.map((key, index) =>
-                                                            <tr>
+                                                            <tr index="{index}">
                                                                 <td>{index}</td>
                                                                 <td>{key.description}</td>
                                                             </tr>)
@@ -368,7 +386,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            <Button onClick={this.checkRegisterANewProposal} variant="dark"> Submit this one! </Button>
+                                            <Button onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
 
                                         </div>
 
@@ -380,14 +398,14 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="danger"> End the session of
+                                            <Button onClick={this.getStatusOfWorkflow} variant="danger"> End the session of
                                                 registration of proposals </Button>
                                         </div>
 
                                         <br/>
 
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.checkGetStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                            <Button onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
                                         </div>
 
                                     </Card.Body>
