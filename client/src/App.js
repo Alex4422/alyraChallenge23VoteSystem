@@ -171,14 +171,15 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    startProposalsRegistrationStarted = async() => {
+    startProposalsRegistrationSession = async() => {
 
         const { accounts, contract } = this.state;
         await contract.methods.startProposalRegistrationSession().send({from: accounts[0]});
     }
 
     /**
-     *
+     * name: eventProposalRegistered
+     * description: manages the information of the list of the registered proposals in the smart contract
      * @param event
      * @returns {Promise<void>}
      */
@@ -195,6 +196,7 @@ class App extends Component {
 
     /**
      * name: registerANewProposal
+     * description: allows to register a new proposal
      * @returns {Promise<void>}
      */
     registerANewProposal = async(event) => {
@@ -215,8 +217,19 @@ class App extends Component {
         }
 
     }
-    
-  
+
+    /**
+     * name: endProposalsRegistrationSession
+     * description: run the function of the smart contract which allows to close the
+     * registration of the proposals
+     * @param event
+     * @returns {Promise<void>}
+     */
+    endProposalsRegistrationSession = async(event) => {
+
+        const { accounts, contract } = this.state;
+        await contract.methods.endProposalRegistrationSession().send({from: accounts[0]});
+    }
 
 
     //************************ render ************************
@@ -310,7 +323,7 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.startProposalsRegistrationStarted} variant="danger"> Start the session of
+                                            <Button onClick={this.startProposalsRegistrationSession} variant="danger"> Start the session of
                                                 registration of proposals </Button>
                                         </div>
 
@@ -356,14 +369,15 @@ class App extends Component {
                                                 <Table striped bordered hover>
                                                     <thead>
                                                     <tr>
-                                                        <th>@</th>
+                                                        <th>Number</th>
+                                                        <th>Description</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {proposals !== null && proposals.map((key, index) =>
-                                                            <tr index="{index}">
+                                                        {proposals.map((a, index) =>
+                                                            <tr key={index}>
                                                                 <td>{index}</td>
-                                                                <td>{key.description}</td>
+                                                                <td>{a.description}</td>
                                                             </tr>)
                                                         }
                                                     </tbody>
@@ -398,7 +412,7 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.getStatusOfWorkflow} variant="danger"> End the session of
+                                            <Button onClick={this.endProposalsRegistrationSession} variant="danger"> End the session of
                                                 registration of proposals </Button>
                                         </div>
 
@@ -413,21 +427,8 @@ class App extends Component {
                                 </Card>
 
                             </div>
-
-
-
-
-
-
-
-
-
-
                         </div>
                     )
-
-
-
                 break;
 
             //We will start the session of proposal voting
