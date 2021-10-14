@@ -16,7 +16,7 @@ class App extends Component {
     //initialisations
     state = { web3: null, accounts: null, contract: null,
         formError: null,formAddress: null, formProposal: null, ownerOfVotes: null,
-        workflowStatusNum: 0, whitelist: [], proposals: []};
+        workflowStatusNum: 0, whitelist: [], proposals: [], winningProposalID: null};
 
     /**
      * name: componentDidMount
@@ -79,6 +79,9 @@ class App extends Component {
         //the refresh of the page
         const proposals = await contract.methods.getProposals().call();
 
+        //Get the winning proposal ID
+        const winningProposalID = await contract.methods.getWinningProposalID().call();
+
         //Get the workflow status
         const workflowStatusNum = parseInt(await contract.methods.getStatusOfWorkflow().call());
         console.log('workflowStatusNum: ', workflowStatusNum);
@@ -86,7 +89,7 @@ class App extends Component {
         console.log('Checksum of ownerOfVotes: ', ownerOfVotes);
 
         //update the state
-        this.setState({whitelist, ownerOfVotes, workflowStatusNum, proposals} );
+        this.setState({whitelist, ownerOfVotes, workflowStatusNum, proposals, winningProposalID} );
 
         //List of the different events defined in the smart contract Voting & application for the DAPP
         //the voter is registered
@@ -109,7 +112,6 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    
     eventVoterRegistered = async (event) => {
         const { contract } = this.state;
         //1 method
@@ -127,7 +129,6 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-  
     RegisterVoter = async(event) => {
 
         event.preventDefault();
@@ -138,7 +139,6 @@ class App extends Component {
             this.setState({ formError: null });
             //We use the registerVoter method defined in the smart contract
             await contract.methods.registerVoter(address).send({from: accounts[0]});
-            //window.location.reload(false);
         } catch (error){
             console.error(error.message);
             this.setState({formError: error.message});
@@ -265,11 +265,10 @@ class App extends Component {
         updatedProposals[event.returnValues[1]].voteCount = parseInt(updatedProposals[event.returnValues[1]].voteCount);
 
         updatedProposals = await contract.methods.getProposals().call();
+        console.log('This updatedProposals was voted :', updatedProposals);
 
         this.setState({proposals: updatedProposals});
     }
-
-
 
     /**
      * name: registerVotes
@@ -285,8 +284,6 @@ class App extends Component {
         try {
             this.setState({formError: null});
             await contract.methods.doTheVote(vote).send({from: accounts[0]});
-            console.log('this proposal was voted how many times?', vote);
-
         } catch (error) {
             console.error(error.message);
             this.setState({ formError: error.message });
@@ -316,9 +313,21 @@ class App extends Component {
         await contract.methods.tallyVotesSession().send({from: accounts[0]});
     }
 
+    /**
+     * name: getWinningProposalID
+     * description: allows to get the ID of winning proposal
+     * @returns {Promise<void>}
+     */
+    getWinningProposalID = async() => {
+
+        const { contract } = this.state;
+        const winningProposalID = await contract.methods.getWinningProposalID().call();
+        this.setState(winningProposalID);
+    }
+
     //************************ render ************************
     render(){
-        const { accounts, whitelist, proposals, formError, ownerOfVotes } = this.state;
+        const { accounts, whitelist, proposals, formError, ownerOfVotes, winningProposalID } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
@@ -636,7 +645,7 @@ class App extends Component {
                             {header}
 
                             <div style={{display: 'flex', justifyContent: 'center'}}>
-                                <Button style={{minWidth:'350px'}} onClick={this.beginTallySession} variant="outline-warning"> Begin the tally session </Button>
+                                <Button style={{minWidth:'350px'}} onClick={this.beginTallySession} variant="success"> Begin the tally session </Button>
                             </div>
                             <br/>
                             <div style={{display: 'flex', justifyContent: 'center'}}>
@@ -662,6 +671,66 @@ class App extends Component {
                 return (
                     <div>
                         {header}
+
+                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                            <Card style={{width: '50rem'}}>
+                                <Card.Header className="text-center"><strong>List of registered proposals</strong></Card.Header>
+                                <Card.Body>
+                                    <ListGroup variant="flush">
+                                        <ListGroup.Item>
+                                            <Table striped bordered hover>
+                                                <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>proposal(s)</th>
+                                                    <th>Number of votes for this one: </th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {/* list all the proposals from the smart contract */}
+                                                    { proposals !== null && proposals.map((key, index) =>
+                                                        <tr key={index}>
+                                                            <td>{index}</td>
+                                                            <td>{key.description}</td>
+                                                            <td>{key.voteCount}</td>
+                                                        </tr>
+                                                    )}
+
+                                                </tbody>
+                                            </Table>
+                                        </ListGroup.Item>
+                                    </ListGroup>
+                                </Card.Body>
+                            </Card>
+
+                            <Card style={{width: '50rem',justifyContent: 'center'}}>
+                                <Card.Header className="text-center"><strong>The winning proposal is:</strong></Card.Header>
+                                <Card.Body >
+
+                                    <Form.Group>
+
+                                        <br/>
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <h3>{proposals[winningProposalID].description}</h3>
+                                        </div>
+                                    </Form.Group>
+                                    <br/>
+
+                                </Card.Body>
+                            </Card>
+
+                            <Card style={{width: '50rem'}}>
+                                <Card.Header className="text-center" ><strong>Your role: admin </strong> </Card.Header>
+
+                                <Card.Body >
+
+                                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                                        <Button onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                    </div>
+
+                                </Card.Body>
+                            </Card>
+                        </div>
                     </div>
                 )
             default:
