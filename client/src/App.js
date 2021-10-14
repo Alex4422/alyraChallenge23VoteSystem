@@ -70,26 +70,36 @@ class App extends Component {
      * @returns {Promise<void>}
      */
     runInit = async() => {
-        const {accounts, contract} = this.state;
+        const {contract} = this.state;
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
 
+        //Get the different proposals written at the first launch of the website and at
+        //the refresh of the page
+        const proposals = await contract.methods.getProposals().call();
+
+        //Get the workflow status
         const workflowStatusNum = parseInt(await contract.methods.getStatusOfWorkflow().call());
         console.log('workflowStatusNum: ', workflowStatusNum);
         let ownerOfVotes = Web3.utils.toChecksumAddress(await contract.methods.getOwnerOfVotes().call());
         console.log('Checksum of ownerOfVotes: ', ownerOfVotes);
 
         //update the state
-        this.setState({whitelist, ownerOfVotes, workflowStatusNum} );
+        this.setState({whitelist, ownerOfVotes, workflowStatusNum, proposals} );
 
         //List of the different events defined in the smart contract Voting & application for the DAPP
+        //the voter is registered
         contract.events.VoterRegistered().on('data', (event) => this.eventVoterRegistered(event)).on('error', console.error);
+
+        //the workflow status is changed
         contract.events.WorkflowStatusChange().on('data', (event) => this.eventWorkflowStatusChange(event)).on('error', console.error);
-        //proposals registered
+
+        //the proposal is registered
         contract.events.ProposalRegistered().on('data', (event) => this.eventProposalRegistered(event)).on('error', console.error);
 
-        //voted registered
+        //the vote is registered
+        contract.events.Voted().on('data', (event) => this.eventProposalVoted(event)).on('error', console.error);
 
     }
 
@@ -101,7 +111,7 @@ class App extends Component {
      */
     
     eventVoterRegistered = async (event) => {
-        const { whitelist, contract } = this.state;
+        const { contract } = this.state;
         //1 method
         //const updatedWhitelist = whitelist;
         //updatedWhitelist.push(event.returnValues[0]);
@@ -185,12 +195,11 @@ class App extends Component {
      */
     eventProposalRegistered = async(event) => {
 
-        const { proposals, contract } = this.state;
-        //const updatedProposals = proposals;
-        //updatedProposals.push(event.returnValues[0]);
-
+        const {contract} = this.state;
         //2e method
+        // retrieve the list of the registered proposals
         const updatedProposals = await contract.methods.getProposals().call();
+
         this.setState({proposals: updatedProposals});
     }
 
@@ -225,16 +234,70 @@ class App extends Component {
      * @param event
      * @returns {Promise<void>}
      */
-    endProposalsRegistrationSession = async(event) => {
+    endProposalsRegistrationSession = async() => {
 
         const { accounts, contract } = this.state;
         await contract.methods.endProposalRegistrationSession().send({from: accounts[0]});
     }
 
+    /**
+     * name: startVotingSession
+     * description: allows to start the session of proposals voting
+     * @returns {Promise<void>}
+     */
+    startVotingSession = async() => {
+
+        const { accounts, contract } = this.state;
+        await contract.methods.startVotingSession().send({from:accounts[0]});
+    }
+
+    /**
+     * name: eventProposalVoted
+     * description: allows to update the proposals voted in the list
+     * @param event
+     * @returns {Promise<void>}
+     */
+    eventProposalVoted = async(event) => {
+
+        const { proposals, contract } = this.state;
+
+        let updatedProposals = proposals;
+        updatedProposals[event.returnValues[1]].voteCount = parseInt(updatedProposals[event.returnValues[1]].voteCount);
+
+        updatedProposals = await contract.methods.getProposals().call();
+
+        this.setState({proposals: updatedProposals});
+    }
+
+
+
+    /**
+     * name: registerVotes
+     * description: allows to register a vote for the proposal chosen by the voter
+     * @returns {Promise<void>}
+     */
+    registerVotes = async() => {
+
+        const { accounts, contract} = this.state;
+
+        const vote = parseInt(this.state.formVote);
+        console.log('this proposal was voted how many times?', vote);
+
+        try {
+            this.setState({formError: null});
+            await contract.methods.doTheVote(vote).send({from: accounts[0]});
+            //window.location.reload(false);
+        } catch (error) {
+            console.error(error.message);
+            this.setState({ formError: error.message });
+        }
+
+    }
+
 
     //************************ render ************************
     render(){
-        const { accounts, whitelist, proposals, formError, ownerOfVotes, workflowStatusNum } = this.state;
+        const { accounts, whitelist, proposals, formError, ownerOfVotes } = this.state;
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
@@ -311,7 +374,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            <Button onClick={this.RegisterVoter} variant="dark"> Authorise </Button>
+                                            <Button style={{minWidth:'350px'}} onClick={this.RegisterVoter} variant="dark"> Authorise </Button>
 
                                         </div>
 
@@ -322,15 +385,15 @@ class App extends Component {
                                     <Card.Header className="text-center"><strong>Your role: admin </strong></Card.Header>
 
                                     <Card.Body>
-                                        <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.startProposalsRegistrationSession} variant="danger"> Start the session of
+                                        <div style={{display: 'flex', justifyContent: 'center' }}>
+                                            <Button style={{minWidth:'350px'}} onClick={this.startProposalsRegistrationSession} variant="danger"> Start the session of
                                                 registration of proposals </Button>
                                         </div>
 
                                         <br/>
 
-                                        <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                        <div style={{display: 'flex', justifyContent: 'center'}} >
+                                            <Button style={{minWidth:'350px'}} onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
                                         </div>
 
                                     </Card.Body>
@@ -369,12 +432,12 @@ class App extends Component {
                                                 <Table striped bordered hover>
                                                     <thead>
                                                     <tr>
-                                                        <th>Number</th>
+                                                        <th>ID</th>
                                                         <th>Description</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {proposals.map((a, index) =>
+                                                        {proposals !== null && proposals.map((a, index) =>
                                                             <tr key={index}>
                                                                 <td>{index}</td>
                                                                 <td>{a.description}</td>
@@ -400,7 +463,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            <Button onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
+                                            <Button style={{minWidth:'350px'}} onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
 
                                         </div>
 
@@ -412,14 +475,14 @@ class App extends Component {
 
                                     <Card.Body>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.endProposalsRegistrationSession} variant="danger"> End the session of
+                                            <Button style={{minWidth:'350px'}} onClick={this.endProposalsRegistrationSession} variant="danger"> End the session of
                                                 registration of proposals </Button>
                                         </div>
 
                                         <br/>
 
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                                            <Button onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                            <Button style={{minWidth:'350px'}} onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
                                         </div>
 
                                     </Card.Body>
@@ -431,7 +494,7 @@ class App extends Component {
                     )
                 break;
 
-            //We will start the session of proposal voting
+            //The admin could start the session of proposal voting
             case 2:
 
                 if (cSAccounts0 === ownerOfVotes) {
@@ -439,10 +502,16 @@ class App extends Component {
                     return (
                         <div>
                             {header}
+
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Button style={{minWidth:'350px'}} onClick={this.startVotingSession} variant="secondary"> Begin the votes of the proposals! </Button>
+                            </div>
+                            <br/>
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Button style={{minWidth:'350px'}} onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                            </div>
                         </div>
                     )
-
-
                 } else {
                     return (
                         <div>
@@ -456,24 +525,85 @@ class App extends Component {
             //We vote the different proposals written by the voters
             case 3:
 
-                if (cSAccounts0 === ownerOfVotes) {
-
                     return (
                         <div>
                             {header}
+
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center"><strong>List of registered proposals</strong></Card.Header>
+                                    <Card.Body>
+                                        <ListGroup variant="flush">
+                                            <ListGroup.Item>
+                                                <Table striped bordered hover>
+                                                    <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>proposal(s)</th>
+                                                        <th>Number of votes for this one: </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                       {proposals !== null && proposals.map((a, index) =>
+                                                           <tr key={index}>
+                                                               <td>{index}</td>
+                                                               <td>{a.description}</td>
+                                                               <td>{a.voteCount}</td>
+                                                           </tr>)
+                                                       }
+
+                                                    </tbody>
+                                                </Table>
+                                            </ListGroup.Item>
+                                        </ListGroup>
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem',justifyContent: 'center'}}>
+                                    <Card.Header className="text-center"><strong>Vote for your favorite proposal, please</strong></Card.Header>
+                                    <Card.Body >
+
+                                        <Form.Group>
+                                            <Form.Control defaultValue={'Default'} as="select" onChange={e => this.setState({ formVote: e.target.value })}>
+                                                <option value="Default" disabled hidden ></option>
+                                                    { proposals !== null && proposals.map((a, index) =>
+                                                        <option key={index} value={index}>
+                                                            {a.description}
+                                                        </option>)
+                                                    }
+                                            </Form.Control>
+
+                                            <br/>
+                                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                                <Button style={{minWidth:'350px'}} variant="primary" onClick={this.registerVotes}>Vote this one!</Button>
+                                            </div>
+                                        </Form.Group>
+
+                                        <br/>
+
+                                    </Card.Body>
+                                </Card>
+
+                                <Card style={{width: '50rem'}}>
+                                    <Card.Header className="text-center" ><strong>Your role: admin </strong> </Card.Header>
+
+                                    <Card.Body >
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button style={{minWidth:'350px'}} onClick={this.endSessionVotes} variant="danger"> Close the session of votes </Button>
+                                        </div>
+                                        <br/>
+
+                                        <div style={{display: 'flex', justifyContent: 'center'}}>
+                                            <Button style={{minWidth:'350px'}} onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </div>
                         </div>
                     )
 
-
-                } else {
-                    return (
-                        <div>
-                            {header}
-                            {forbiddenOperationsArea}
-                        </div>
-                    )
-                }
-                break;
+              break;
 
             //We will begin the tally session
             case 4:
