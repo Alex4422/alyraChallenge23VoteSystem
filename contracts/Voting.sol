@@ -247,10 +247,10 @@ contract Voting is Ownable{
     }
 
     /**
-     *   title: EndVotingSession
+     *   title: endVotingSession
      *   @notice closes the session of vote
      */
-    function EndVotingSession() public onlyOwner isRightWorkflowStatus(WorkflowStatus.VotingSessionStarted){
+    function endVotingSession() public onlyOwner isRightWorkflowStatus(WorkflowStatus.VotingSessionStarted){
 
         status = WorkflowStatus.VotingSessionEnded;
 

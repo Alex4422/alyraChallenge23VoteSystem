@@ -281,12 +281,12 @@ class App extends Component {
         const { accounts, contract} = this.state;
 
         const vote = parseInt(this.state.formVote);
-        console.log('this proposal was voted how many times?', vote);
 
         try {
             this.setState({formError: null});
             await contract.methods.doTheVote(vote).send({from: accounts[0]});
-            //window.location.reload(false);
+            console.log('this proposal was voted how many times?', vote);
+
         } catch (error) {
             console.error(error.message);
             this.setState({ formError: error.message });
@@ -294,6 +294,27 @@ class App extends Component {
 
     }
 
+    /**
+     * name: endSessionVotes
+     * description: allows the admin to close the session of votes
+     * @returns {Promise<void>}
+     */
+    endSessionVotes = async () => {
+
+        const { accounts, contract } = this.state;
+        await contract.methods.endVotingSession().send({from:accounts[0]});
+    }
+
+    /**
+     * name: beginTallySession
+     * description: allows the administrator to begin the session to tally the votes
+     * @returns {Promise<void>}
+     */
+    beginTallySession = async () => {
+
+        const { accounts, contract } = this.state;
+        await contract.methods.tallyVotesSession().send({from: accounts[0]});
+    }
 
     //************************ render ************************
     render(){
@@ -605,7 +626,7 @@ class App extends Component {
 
               break;
 
-            //We will begin the tally session
+            //The admin could begin the tally session
             case 4:
 
                 if (cSAccounts0 === ownerOfVotes) {
@@ -613,6 +634,14 @@ class App extends Component {
                     return (
                         <div>
                             {header}
+
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Button style={{minWidth:'350px'}} onClick={this.beginTallySession} variant="outline-warning"> Begin the tally session </Button>
+                            </div>
+                            <br/>
+                            <div style={{display: 'flex', justifyContent: 'center'}}>
+                                <Button style={{minWidth:'350px'}} onClick={this.getStatusOfWorkflow} variant="info"> Get the status of the workflow (console) </Button>
+                            </div>
                         </div>
                     )
 
