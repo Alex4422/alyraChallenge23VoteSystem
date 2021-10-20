@@ -191,7 +191,6 @@ contract Voting is Ownable{
 
         require(bytes(_proposal).length > 0,"Type, at least, one character please!");
         require(!presentProposal[_proposal],"This proposal is already present!");
-        require(voters[msg.sender].isRegistered, "You aren't registered!");
 
         proposals.push(Proposal(_proposal, 0));
         presentProposal[_proposal] = true;
