@@ -189,7 +189,7 @@ contract Voting is Ownable{
      */
     function registerProposal(string memory _proposal) public isRightWorkflowStatus(WorkflowStatus.ProposalsRegistrationStarted) onlyRegistered(msg.sender){
 
-        //require(voters[msg.sender].isRegistered = true, "The voter is not on the registered list");
+        //require(voters[msg.sender].isRegistered == true, "The voter is not on the registered list");
         require(bytes(_proposal).length > 0,"Type, at least, one character please!");
         require(!presentProposal[_proposal],"This proposal is already present!");
 

@@ -1,6 +1,9 @@
 {
+  "name": "votingSystem",
+  "version": "0.1.0",
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
-    "@openzeppelin/test-helpers": "^0.5.15"
+    "@openzeppelin/test-helpers": "^0.5.15",
+    "webpack": "4.41.0"
   }
 }
