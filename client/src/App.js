@@ -16,7 +16,7 @@ class App extends Component {
     //initialisations
     state = { web3: null, accounts: null, contract: null,
         formError: null,formAddress: null, formProposal: null, ownerOfVotes: null,
-        workflowStatusNum: 0, whitelist: [], proposals: [], winningProposalID: null};
+        workflowStatusNum: 0, whitelist: [], proposals: [], winningProposalID: null, btnWhitelistIsInactive: true};
 
     /**
      * name: componentDidMount
@@ -33,6 +33,11 @@ class App extends Component {
             //using of web3 to get the accounts of the user (in metamask)
             const accounts = await web3.eth.getAccounts();
 
+            for(let i = 0; i < this.state.whitelist.length; i++) {
+                if(this.state.whitelist[i] == accounts[0]) {
+                    this.setState({btnWhitelistIsInactive: false})
+                }
+            }
             //get the instance of the smart contract "Voting" with web3 and the informations of deployed file (client/src/contracts/Voting.json)
             const networkId = await web3.eth.net.getId();
             const deployedNetwork = Voting.networks[networkId];
@@ -47,7 +52,15 @@ class App extends Component {
             // To avoid the problem of switch accounts in order to refresh the screen
             // related to the account where I am
             window.ethereum.on('accountsChanged', (accounts) => {
-
+               // console.log(this.state.whitelist)
+                for(let i = 0; i < this.state.whitelist.length; i++) {
+                    console.log(this.state.whitelist[i]);
+                    console.log(accounts[0])
+                    if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
+                        console.log('change state')
+                        this.setState({btnWhitelistIsInactive: false})
+                    }
+                }
                 this.setState({accounts});
 
             });
@@ -74,7 +87,7 @@ class App extends Component {
 
         //Get the authorised account list
         const whitelist = await contract.methods.getAddresses().call();
-
+        console.log({whitelist})
         //Get the different proposals written at the first launch of the website and at
         //the refresh of the page
         const proposals = await contract.methods.getProposals().call();
@@ -493,18 +506,7 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
-                                            {/*try
-                                            {whitelist.map((a,index) => <tr key={index}>
-                                                <td>{a}</td>
-                                            </tr>)
-                                            }
-                                            if (cSAccounts0 === ownerOfVotes) {
-
-                                            if (whitelist.has({a,index}){
-                                                    alert('hello')
-                                            }
-                                             */}
-                                            <Button style={{minWidth:'350px'}} onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
+                                            <Button disabled={this.state.btnWhitelistIsInactive} style={{minWidth:'350px'}} onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
 
                                         </div>
 
