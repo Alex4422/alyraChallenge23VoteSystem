@@ -493,6 +493,17 @@ class App extends Component {
                                         <br/>
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
 
+                                            {/*try
+                                            {whitelist.map((a,index) => <tr key={index}>
+                                                <td>{a}</td>
+                                            </tr>)
+                                            }
+                                            if (cSAccounts0 === ownerOfVotes) {
+
+                                            if (whitelist.has({a,index}){
+                                                    alert('hello')
+                                            }
+                                             */}
                                             <Button style={{minWidth:'350px'}} onClick={this.registerANewProposal} variant="dark"> Submit this one! </Button>
 
                                         </div>
