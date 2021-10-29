@@ -62,6 +62,7 @@ class App extends Component {
                     console.log('this.state.whitelist[i]: ', this.state.whitelist[i]);
                     console.log('accounts[0]: ', accounts[0]);
                     //if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
+                    //this.state.whitelist[i] doesn't seem to move !
                     if(Web3.utils.toChecksumAddress(this.state.whitelist[i]) === Web3.utils.toChecksumAddress(accounts[0])) {
                         console.log('change state, I am go though the if');
                         this.setState({btnWhitelistIsInactive: false});
