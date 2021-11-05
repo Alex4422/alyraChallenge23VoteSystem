@@ -17,7 +17,7 @@ class App extends Component {
     state = { web3: null, accounts: null, contract: null,
         formError: null,formAddress: null, formProposal: null, ownerOfVotes: null,
         workflowStatusNum: 0, whitelist: [], proposals: [], winningProposalID: null,
-        btnWhitelistIsInactive: true};
+        btnWhitelistIsInactive: true, btnVoteIsInactive: true};
 
     /**
      * name: componentDidMount
@@ -38,10 +38,22 @@ class App extends Component {
                 //if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
                 if(Web3.utils.toChecksumAddress(this.state.whitelist[i]) === Web3.utils.toChecksumAddress(accounts[0])) {
                     this.setState({btnWhitelistIsInactive: false});
+                    const voter = await this.state.contract.methods.getVoter(accounts[0]).call();
+                    if(voter.hasVoted == true){
+                        console.log("hasVoted");
+                        this.setState({btnVoteIsInactive: true});
+                    } else {
+                        this.setState({btnVoteIsInactive: false});
+                    }
+                    break;
                 }
                 else{
                     this.setState({btnWhitelistIsInactive: true});
+                    this.setState({btnVoteIsInactive: true});
                 }
+
+
+
             }
             //get the instance of the smart contract "Voting" with web3 and the informations of deployed file (client/src/contracts/Voting.json)
             const networkId = await web3.eth.net.getId();
@@ -56,21 +68,30 @@ class App extends Component {
 
             // To avoid the problem of switch accounts in order to refresh the screen
             // related to the account where I am
-            window.ethereum.on('accountsChanged', (accounts) => {
+            window.ethereum.on('accountsChanged', async (accounts) => {
                // console.log(this.state.whitelist)
                 for(let i = 0; i < this.state.whitelist.length; i++) {
                     console.log('this.state.whitelist[i]: ', this.state.whitelist[i]);
                     console.log('accounts[0]: ', accounts[0]);
                     //if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
-                    //this.state.whitelist[i] doesn't seem to move !
                     if(Web3.utils.toChecksumAddress(this.state.whitelist[i]) === Web3.utils.toChecksumAddress(accounts[0])) {
                         console.log('change state, I am go though the if');
                         this.setState({btnWhitelistIsInactive: false});
+
+                        const voter = await this.state.contract.methods.getVoter(accounts[0]).call();
+                        if(voter.hasVoted == true){
+                            console.log("hasVoted");
+                            this.setState({btnVoteIsInactive: true});
+                        } else {
+                            this.setState({btnVoteIsInactive: false});
+                        }
+
+                        break;
                     }
                     else{
                         this.setState({btnWhitelistIsInactive: true});
+                        this.setState({btnVoteIsInactive: true});
                     }
-
                 }
                 this.setState({accounts});
 
@@ -150,8 +171,7 @@ class App extends Component {
             this.setState({btnWhitelistIsInactive: false});
         }
 
-
-           this.setState({ whitelist: updatedWhitelist });
+        this.setState({ whitelist: updatedWhitelist });
     }
 
     /**
@@ -290,10 +310,16 @@ class App extends Component {
      */
     eventProposalVoted = async(event) => {
 
-        const { proposals, contract } = this.state;
+        const { proposals, contract , accounts  } = this.state;
 
         let updatedProposals = proposals;
         updatedProposals[event.returnValues[1]].voteCount = parseInt(updatedProposals[event.returnValues[1]].voteCount);
+        console.log('value of event.returnValues[0]: ', event.returnValues[0]);
+
+        if(Web3.utils.toChecksumAddress(event.returnValues[0]) === Web3.utils.toChecksumAddress(accounts[0])) {
+
+            this.setState({btnVoteIsInactive: false});
+        }
 
         updatedProposals = await contract.methods.getProposals().call();
         console.log('This updatedProposals was voted :', updatedProposals);
@@ -637,7 +663,7 @@ class App extends Component {
 
                                             <br/>
                                             <div style={{display: 'flex', justifyContent: 'center'}}>
-                                                <Button style={{minWidth:'350px'}} variant="primary" onClick={this.registerVotes}>Vote this one!</Button>
+                                                <Button  disabled={this.state.btnVoteIsInactive}  style={{minWidth:'350px'}} variant="primary" onClick={this.registerVotes}>Vote this one!</Button>
                                             </div>
                                         </Form.Group>
 
