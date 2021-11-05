@@ -324,6 +324,14 @@ class App extends Component {
         updatedProposals = await contract.methods.getProposals().call();
         console.log('This updatedProposals was voted :', updatedProposals);
 
+        const voter = await this.state.contract.methods.getVoter(accounts[0]).call();
+        if(voter.hasVoted == true){
+            console.log("hasVoted");
+            this.setState({btnVoteIsInactive: true});
+        } else {
+            this.setState({btnVoteIsInactive: false});
+        }
+
         this.setState({proposals: updatedProposals});
     }
 
@@ -770,6 +778,7 @@ class App extends Component {
                                         <div style={{display: 'flex', justifyContent: 'center'}}>
                                             <h3>{proposals[winningProposalID].description}</h3>
                                         </div>
+                                        
                                     </Form.Group>
                                     <br/>
 
