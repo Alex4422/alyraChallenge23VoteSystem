@@ -384,7 +384,7 @@ class App extends Component {
 
     /**
      * name: getWinningProposalID
-     * description: allows to get the ID of winning proposal
+     * description: allows to get the ID of winning proposal - second way to do
      * @returns {Promise<void>}
      */
     getWinningProposalID = async() => {
@@ -394,6 +394,7 @@ class App extends Component {
 
         console.log('state of winningProposalID: ', winningProposalID);
         this.setState({winningProposalID});
+        
     }
 
     //************************ render ************************
