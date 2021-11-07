@@ -375,6 +375,10 @@ class App extends Component {
     beginTallySession = async () => {
 
         const { accounts, contract } = this.state;
+        const winningProposalID = await contract.methods.getWinningProposalID().call();
+
+        console.log('state of winningProposalID: ', winningProposalID);
+        this.setState({winningProposalID});
         await contract.methods.tallyVotesSession().send({from: accounts[0]});
     }
 
@@ -387,7 +391,9 @@ class App extends Component {
 
         const { contract } = this.state;
         const winningProposalID = await contract.methods.getWinningProposalID().call();
-        this.setState(winningProposalID);
+
+        console.log('state of winningProposalID: ', winningProposalID);
+        this.setState({winningProposalID});
     }
 
     //************************ render ************************
