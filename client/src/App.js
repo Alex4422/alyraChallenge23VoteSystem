@@ -35,12 +35,11 @@ class App extends Component {
             const accounts = await web3.eth.getAccounts();
 
             for(let i = 0; i < this.state.whitelist.length; i++) {
-                //if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
                 if(Web3.utils.toChecksumAddress(this.state.whitelist[i]) === Web3.utils.toChecksumAddress(accounts[0])) {
                     this.setState({btnWhitelistIsInactive: false});
                     const voter = await this.state.contract.methods.getVoter(accounts[0]).call();
                     if(voter.hasVoted == true){
-                        console.log("hasVoted");
+                        console.log("This voter has Voted");
                         this.setState({btnVoteIsInactive: true});
                     } else {
                         this.setState({btnVoteIsInactive: false});
@@ -51,10 +50,8 @@ class App extends Component {
                     this.setState({btnWhitelistIsInactive: true});
                     this.setState({btnVoteIsInactive: true});
                 }
-
-
-
             }
+
             //get the instance of the smart contract "Voting" with web3 and the informations of deployed file (client/src/contracts/Voting.json)
             const networkId = await web3.eth.net.getId();
             const deployedNetwork = Voting.networks[networkId];
@@ -64,16 +61,12 @@ class App extends Component {
                 deployedNetwork && deployedNetwork.address,
             );
 
-
-
             // To avoid the problem of switch accounts in order to refresh the screen
             // related to the account where I am
             window.ethereum.on('accountsChanged', async (accounts) => {
-               // console.log(this.state.whitelist)
                 for(let i = 0; i < this.state.whitelist.length; i++) {
                     console.log('this.state.whitelist[i]: ', this.state.whitelist[i]);
                     console.log('accounts[0]: ', accounts[0]);
-                    //if(this.state.whitelist[i].toLowerCase() == accounts[0].toLowerCase()) {
                     if(Web3.utils.toChecksumAddress(this.state.whitelist[i]) === Web3.utils.toChecksumAddress(accounts[0])) {
                         console.log('change state, I am go though the if');
                         this.setState({btnWhitelistIsInactive: false});
@@ -85,7 +78,6 @@ class App extends Component {
                         } else {
                             this.setState({btnVoteIsInactive: false});
                         }
-
                         break;
                     }
                     else{
@@ -159,11 +151,7 @@ class App extends Component {
      */
     eventVoterRegistered = async (event) => {
         const { contract, accounts } = this.state;
-        //1 method
-        //const updatedWhitelist = whitelist;
-        //updatedWhitelist.push(event.returnValues[0]);
 
-        //2e method
         const updatedWhitelist = await contract.methods.getAddresses().call();
 
         console.log('value of event.returnValues[0]: ', event.returnValues[0]);
@@ -208,8 +196,6 @@ class App extends Component {
         const updatedworkflowStatusNum = parseInt(await contract.methods.getStatusOfWorkflow().call());
         this.setState({ workflowStatusNum: updatedworkflowStatusNum });
 
-        //const newWorkflowStatusNum = parseInt(workflowStatusNum) + 1;
-        //this.setState({workflowStatusNum: parseInt(newWorkflowStatusNum)});
     }
 
     /**
@@ -247,7 +233,7 @@ class App extends Component {
     eventProposalRegistered = async(event) => {
 
         const {contract, accounts} = this.state;
-        //2e method
+
         // retrieve the list of the registered proposals
         const updatedProposals = await contract.methods.getProposals().call();
 
@@ -261,21 +247,17 @@ class App extends Component {
      */
     registerANewProposal = async(event) => {
 
-        //event.preventDefault();
         const { accounts, contract  } = this.state;
-
         const yourProposal = this.state.formProposal;
 
         try{
             this.setState({formError:null});
             //We use the registerProposal method defined in the smart contract
             await contract.methods.registerProposal(yourProposal).send({from:accounts[0]});
-            //this.setState({formProposal:null});
         }catch (error){
             console.error(error.message);
             this.setState({formError:error.message});
         }
-
     }
 
     /**
@@ -353,7 +335,6 @@ class App extends Component {
             console.error(error.message);
             this.setState({ formError: error.message });
         }
-
     }
 
     /**
