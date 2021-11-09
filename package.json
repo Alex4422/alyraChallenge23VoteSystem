@@ -4,6 +4,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
     "@openzeppelin/test-helpers": "^0.5.15",
+    "gh-pages": "^3.2.3",
     "webpack": "4.41.0"
   }
 }
