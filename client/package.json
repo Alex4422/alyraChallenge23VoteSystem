@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://Alex4422.github.io/alyraChallenge23VoteSystem/",
+
   "dependencies": {
     "@babel/runtime": "^7.15.4",
     "bootstrap": "^5.1.3",
