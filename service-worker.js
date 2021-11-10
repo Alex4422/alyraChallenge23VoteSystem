@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/alyraChallenge23VoteSystem/precache-manifest.bf98ba2d058b3bee9cbadb095149e05c.js"
+  "/alyraChallenge23VoteSystem/precache-manifest.3ee75f446bb413f0ddddba10166c2355.js"
 );
 
 self.addEventListener('message', (event) => {

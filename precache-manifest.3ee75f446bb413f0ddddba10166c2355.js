@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "6c879e246e5720b07b78a04009210cc9",
+    "revision": "94c3bc1bc3916398463c542977b3f057",
     "url": "/alyraChallenge23VoteSystem/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/alyraChallenge23VoteSystem/static/css/2.68a81a89.chunk.css"
   },
   {
-    "revision": "51a184289f3d3c69e84f",
+    "revision": "cf86cf95d2a8c43c8fa3",
     "url": "/alyraChallenge23VoteSystem/static/css/main.b100e6da.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/alyraChallenge23VoteSystem/static/js/2.dfef6cad.chunk.js"
   },
   {
-    "revision": "51a184289f3d3c69e84f",
-    "url": "/alyraChallenge23VoteSystem/static/js/main.871dd522.chunk.js"
+    "revision": "cf86cf95d2a8c43c8fa3",
+    "url": "/alyraChallenge23VoteSystem/static/js/main.52b3c940.chunk.js"
   },
   {
     "revision": "77db53204c2405caf39c",

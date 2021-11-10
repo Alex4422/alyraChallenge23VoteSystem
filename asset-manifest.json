@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/alyraChallenge23VoteSystem/static/css/main.b100e6da.chunk.css",
-    "main.js": "/alyraChallenge23VoteSystem/static/js/main.871dd522.chunk.js",
-    "main.js.map": "/alyraChallenge23VoteSystem/static/js/main.871dd522.chunk.js.map",
+    "main.js": "/alyraChallenge23VoteSystem/static/js/main.52b3c940.chunk.js",
+    "main.js.map": "/alyraChallenge23VoteSystem/static/js/main.52b3c940.chunk.js.map",
     "runtime-main.js": "/alyraChallenge23VoteSystem/static/js/runtime-main.11d13b95.js",
     "runtime-main.js.map": "/alyraChallenge23VoteSystem/static/js/runtime-main.11d13b95.js.map",
     "static/css/2.68a81a89.chunk.css": "/alyraChallenge23VoteSystem/static/css/2.68a81a89.chunk.css",
     "static/js/2.dfef6cad.chunk.js": "/alyraChallenge23VoteSystem/static/js/2.dfef6cad.chunk.js",
     "static/js/2.dfef6cad.chunk.js.map": "/alyraChallenge23VoteSystem/static/js/2.dfef6cad.chunk.js.map",
     "index.html": "/alyraChallenge23VoteSystem/index.html",
-    "precache-manifest.bf98ba2d058b3bee9cbadb095149e05c.js": "/alyraChallenge23VoteSystem/precache-manifest.bf98ba2d058b3bee9cbadb095149e05c.js",
+    "precache-manifest.3ee75f446bb413f0ddddba10166c2355.js": "/alyraChallenge23VoteSystem/precache-manifest.3ee75f446bb413f0ddddba10166c2355.js",
     "service-worker.js": "/alyraChallenge23VoteSystem/service-worker.js",
     "static/css/2.68a81a89.chunk.css.map": "/alyraChallenge23VoteSystem/static/css/2.68a81a89.chunk.css.map",
     "static/css/main.b100e6da.chunk.css.map": "/alyraChallenge23VoteSystem/static/css/main.b100e6da.chunk.css.map"
@@ -19,6 +19,6 @@
     "static/css/2.68a81a89.chunk.css",
     "static/js/2.dfef6cad.chunk.js",
     "static/css/main.b100e6da.chunk.css",
-    "static/js/main.871dd522.chunk.js"
+    "static/js/main.52b3c940.chunk.js"
   ]
 }
