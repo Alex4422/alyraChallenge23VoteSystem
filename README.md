@@ -1,2 +1,2 @@
 # alyraChallenge23VoteSystem
-A second GUI version for the voting system
+A GUI version for the voting system
